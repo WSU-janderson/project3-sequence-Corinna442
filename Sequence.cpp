@@ -5,20 +5,23 @@
 // indexed from 0 ... (numElts - 1).
 // Constructor (initializer list)
 
-Sequence::Sequence(size_t sz) : numElts(sz), memory(sz) {
+Sequence::Sequence(size_t sz) : numElts(sz), head(nullptr), tail(nullptr) {
 
-    sequenceData = new std::string[memory]; // allocated memory
+    for (size_t i = 0; i < sz; i++) {
+        push_back(""); // initialize nodes using push back
+    }
 
 }
 
 // Copy constructor (deep) of sequence s
-Sequence::Sequence(const Sequence& s) : numElts(s.numElts), memory(s.numElts) {
-    sequenceData = new std::string[memory]; // allocated memory (again for new copy)
+Sequence::Sequence(const Sequence& s) : numElts(0), head(nullptr), tail(nullptr) {
+    SequenceNode* current = s.head; // node object to serve as the pointer for *this list
 
-    // creates each element slot in the sequence object s
-    for (size_t i = 0; i < numElts; i++) {
-        sequenceData[i] = s.sequenceData[i];
+    while (current != nullptr) { // make sure pointer isn't pointing at nothin
+        push_back(current->element); // create new nodes in deep copied list
+        current = current->next; // add nodes
     }
+
 }
 
 // The current sequence is released and replaced by a (deep) copy of sequence
@@ -27,19 +30,33 @@ Sequence::Sequence(const Sequence& s) : numElts(s.numElts), memory(s.numElts) {
 Sequence& Sequence::operator=(const Sequence& s) {
     // Check so that delete[] will not wipe out the memory we need to use
     // to copy
-    if (this != &s) { // Checking if current object s = this sequence object (RHS = LHS)
-        delete[] sequenceData; // free old memory for this block
+    if (this != &s) {
+        // Checking if current object s = this sequence object (RHS = LHS)
 
-        numElts = s.numElts; // copy size of sequence
-        memory = s.memory; // copy memory/capacity
-
-        sequenceData = new std::string[memory]; // Allocate new memory for this sequence
-        for (size_t i = 0; i < numElts; i++) {
-            sequenceData[i] = s.sequenceData[i]; // Copy each element from first s array obj to a new array obj
+        // Delete memory after usage to prevent leaks
+        SequenceNode* current = s.head; // Start with the ptr to the first element of the list
+        while (current != nullptr) { // keep going until it reaches the end
+            SequenceNode* newPointer = current; // temporary ptr- so that we can safely delete current node after continuing forward
+            current = current->next; // move ptr to the next before deleting current ptr
+            delete newPointer; // delete current node's memory from heap
         }
+
+        // Reset fields so that everything is empty
+        head = nullptr;
+        tail = nullptr;
+        numElts = 0;
+
+        // Deep copy from sequence obj s
+        SequenceNode* other = s.head;
+        while (other != nullptr) { // make sure pointer isn't pointing at nothin
+            push_back(other->element); // create new nodes in deep copied list
+            current = other->next; // add nodes
+        }
+
     }
 
-    return *this; // Chaining: a=b=c
+        return *this; // Chaining: a=b=c
+
 
 }
 
@@ -47,7 +64,11 @@ Sequence& Sequence::operator=(const Sequence& s) {
 // associated with the sequence.
 // Deconstructor
 Sequence::~Sequence() {
-    delete[] sequenceData;
+    while (head != nullptr) {
+        SequenceNode* newPointer = head;
+        head = head->next;
+        delete newPointer;
+    }
 }
 
 // The position satisfies ( position >= 0 && position <= last_index() ).
@@ -58,16 +79,15 @@ Sequence::~Sequence() {
 std::string& Sequence::operator[](size_t position) {
     if (position >= numElts) {
         throw std::out_of_range("Index is out of range");
+
+        SequenceNode* current = head;
+        for (size_t i = 1; i < position; i++) {
+            current = current->next;
+        }
+
+        return current->element;
     }
-    return sequenceData[position];
 }
-
-
-
-
-
-
-
 
 void Sequence::push_back(std::string item)
 // The item at the end of the sequence is deleted and size of the sequence is

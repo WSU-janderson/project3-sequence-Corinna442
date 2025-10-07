@@ -5,12 +5,26 @@
 #include <cstddef> // For size_t
 #include <stdexcept> // exceptions
 
+
+class SequenceNode {
+public:
+
+    SequenceNode* next; // pointer to the next node
+    SequenceNode* prev; // pointer to previous node
+    std::string element; // value stored
+
+    SequenceNode() : next(nullptr), prev(nullptr) {} // default constructor
+    SequenceNode(std::string element) : next(nullptr), prev(nullptr), element(element) {} // constructor with params
+
+};
+
 class Sequence {
 
 private:
-    std::string* sequenceData; // pointer to the dynamic array of strings
+    SequenceNode* head;
+    SequenceNode* tail;
     size_t numElts; // Keeps track of how many elements are stored
-    size_t memory; // Tracks how much memory has been distributed so that we can grow the array when needed
+    //Sequence
 
 public:
     // Default constructor, deconstructor, copy constructor
@@ -24,6 +38,8 @@ public:
     std::string& operator[](size_t position); // to access non-const element
     const std::string& operator[](size_t position) const; // to access const element
 
+    void push_back(std::string
+        element);
 };
 
 #endif
