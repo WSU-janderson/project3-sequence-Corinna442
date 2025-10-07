@@ -40,6 +40,9 @@ public:
 
     void push_back(std::string
         element);
+    void pop_back();
+    void insert(size_t position, std::string element);
+    void erase(size_t position);
 };
 
 #endif

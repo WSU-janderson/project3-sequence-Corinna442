@@ -89,15 +89,96 @@ std::string& Sequence::operator[](size_t position) {
     }
 }
 
-void Sequence::push_back(std::string item)
+// pop_back
+void Sequence::push_back(std::string item) {
+    SequenceNode* newNode = new SequenceNode(item);
+    if (head == nullptr) {
+        head = newNode; // list is empty -> new node will be both head and tail
+        tail = newNode;
+    } else {
+        tail->next = newNode; // Attach item to the end
+        newNode->prev = tail; // tail is right before newNode (must keep a pointer backward)
+        tail = newNode;
+    }
+
+    numElts++; // increment numElts
+}
+
 // The item at the end of the sequence is deleted and size of the sequence is
 // reduced by one. If sequence was empty, throws an exception
-void Sequence::pop_back()
+void Sequence::pop_back() {
+    if (head == nullptr) {
+        throw std::out_of_range("Sequence is empty");
+    }
+    else if (head == tail) {
+        delete tail;
+        head = nullptr;
+        tail = nullptr;
+    } else {
+        SequenceNode* oldTail = tail;
+
+        tail = tail->prev; // move tail back one node
+        tail->next = nullptr;
+        delete oldTail; // Delete old tail to prevent leak
+    }
+
+    numElts--; // decrement
+
+}
+
 // The position satisfies ( position >= 0 && position <= last_index() ). The
 // value of item is inserted at position and the size of sequence is increased
 // by one. Throws an exceptionif the position is outside the bounds of the
 // sequence
-void Sequence::insert(size_t position, std::string item)
+void Sequence::insert(size_t position, std::string item) {
+    if (position >= numElts) {
+        throw std::out_of_range("Position is out of range");
+    }
+
+    SequenceNode* newNode = new SequenceNode(item);
+
+    if (position == 0) {
+        // insert beginning node
+        newNode->next = head;
+
+        // List empty check
+        if (head == nullptr) {
+            head->prev = newNode;
+        }
+
+        head = newNode;
+
+        if (tail == nullptr) {
+            tail = newNode;
+        }
+    } else if (position == numElts) {
+        // Insert at end
+        newNode->prev = tail;
+        tail->next = newNode;
+        tail = newNode;
+    } else {
+        // Insert in the middle
+        SequenceNode* current = head;
+        for (size_t i = 0; i < position; i++) {
+            current = current->next;
+        }
+
+        newNode->next = current; // points to node position
+        newNode->prev = current->prev; // points to next node position
+        current->prev->next = newNode;
+        current->prev = newNode;
+    }
+
+    numElts++;
+
+
+}
+
+
+
+
+
+
 // Returns the first element in the sequence. If the sequence is empty, throw an
 // exception.
 std::string Sequence::front() const
