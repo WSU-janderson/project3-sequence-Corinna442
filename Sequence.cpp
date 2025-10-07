@@ -1,20 +1,74 @@
+#include "Sequence.h"
+#include <iostream>
+
 // Creates an empty sequence (numElts == 0) or a sequence of numElts items
 // indexed from 0 ... (numElts - 1).
-Sequence::Sequence(size_t sz = 0)
-// Creates a (deep) copy of sequence s
-Sequence::Sequence(const Sequence& s)
-// Destroys all items in the sequence and release the memory
-// associated with the sequence
-Sequence::~Sequence()
+// Constructor (initializer list)
+
+Sequence::Sequence(size_t sz) : numElts(sz), memory(sz) {
+
+    sequenceData = new std::string[memory]; // allocated memory
+
+}
+
+// Copy constructor (deep) of sequence s
+Sequence::Sequence(const Sequence& s) : numElts(s.numElts), memory(s.numElts) {
+    sequenceData = new std::string[memory]; // allocated memory (again for new copy)
+
+    // creates each element slot in the sequence object s
+    for (size_t i = 0; i < numElts; i++) {
+        sequenceData[i] = s.sequenceData[i];
+    }
+}
+
 // The current sequence is released and replaced by a (deep) copy of sequence
-// s. A reference to the copied sequence is returned (return *this;).
-Sequence& Sequence::operator=(const Sequence& s)
+// s. A reference to the copied sequence is returned (return *this;)
+// Assignment operator
+Sequence& Sequence::operator=(const Sequence& s) {
+    // Check so that delete[] will not wipe out the memory we need to use
+    // to copy
+    if (this != &s) { // Checking if current object s = this sequence object (RHS = LHS)
+        delete[] sequenceData; // free old memory for this block
+
+        numElts = s.numElts; // copy size of sequence
+        memory = s.memory; // copy memory/capacity
+
+        sequenceData = new std::string[memory]; // Allocate new memory for this sequence
+        for (size_t i = 0; i < numElts; i++) {
+            sequenceData[i] = s.sequenceData[i]; // Copy each element from first s array obj to a new array obj
+        }
+    }
+
+    return *this; // Chaining: a=b=c
+
+}
+
+// Destroys all items in the sequence and release the memory
+// associated with the sequence.
+// Deconstructor
+Sequence::~Sequence() {
+    delete[] sequenceData;
+}
+
 // The position satisfies ( position >= 0 && position <= last_index() ).
 // The return value is a reference to the item at index position in the
 // sequence. Throws an exception if the position is outside the bounds
-// of the sequence
-std::string& Sequence::operator[](size_t position)
-// The value of item is append to the sequence.
+// of the sequence.
+// Operator[]
+std::string& Sequence::operator[](size_t position) {
+    if (position >= numElts) {
+        throw std::out_of_range("Index is out of range");
+    }
+    return sequenceData[position];
+}
+
+
+
+
+
+
+
+
 void Sequence::push_back(std::string item)
 // The item at the end of the sequence is deleted and size of the sequence is
 // reduced by one. If sequence was empty, throws an exception
