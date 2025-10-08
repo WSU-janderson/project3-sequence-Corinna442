@@ -1,5 +1,7 @@
 #include "Sequence.h"
 #include <iostream>
+#include <stdexcept>
+using namespace std;
 
 // Creates an empty sequence (numElts == 0) or a sequence of numElts items
 // indexed from 0 ... (numElts - 1).
@@ -170,36 +172,113 @@ void Sequence::insert(size_t position, std::string item) {
     }
 
     numElts++;
-
-
 }
-
-
-
-
-
 
 // Returns the first element in the sequence. If the sequence is empty, throw an
 // exception.
-std::string Sequence::front() const
+std::string Sequence::front() const {
+    if (head == nullptr) {
+        throw std::out_of_range("Sequence is empty");
+    }
+    return head->element;
+}
+
 // Return the last element in the sequence. If the sequence is empty, throw an
 // exception.
-std::string Sequence::back() const
+std::string Sequence::back() const {
+    if (tail == nullptr) {
+        throw std::out_of_range("Sequence is empty");
+    }
+    return tail->element;
+
+}
+
 // Return true if the sequence has no elements, otherwise false.
-bool Sequence::empty() const
+bool Sequence::empty() const {
+    return head == nullptr && tail == nullptr; // Empty if head and tail are null
+}
+
 // Return the number of elements in the sequence.
-size_t Sequence::size() const
+size_t Sequence::size() const {
+    return numElts;
+}
+
 // sequence is released, resetting the sequence to an empty state that can have
  // items re-inserted.
- void Sequence::clear()
+ void Sequence::clear() {
+    SequenceNode* current = head;
+    while (current != nullptr) {
+        SequenceNode* newPointer = current->next;
+        delete current;
+        current = newPointer;
+    }
+    head = nullptr;
+    tail = nullptr;
+    numElts = 0;
+}
+
  // The item at position is removed from the sequence, and the memory
  // is released. If called with an invalid position throws an exception.
- void Sequence::erase(size_t position)
+// Remove a single element from the list at a specific position
+ void Sequence::erase(size_t position) {
+    if (position >= numElts) {
+        throw std::out_of_range("Position is out of range");
+    }
+
+    SequenceNode* current = head;
+    for (size_t i = 0; i < position; i++) {
+        current = current->next;
+    }
+
+    // Re-structure sequence FIRST
+
+    // tail
+    if (current->next != nullptr) {
+        current->next->prev = current->prev; // restore original element pos
+    } else {
+        tail = current->prev; // removing last element
+    }
+
+    // head
+    if (current->prev != nullptr) {
+        current->prev->next = current->next;
+    } else {
+        head = current->next; // remove first element
+    }
+
+    delete current;
+    numElts--;
+}
+
  // The items in the sequence at ( position ... (position + count - 1) ) are
  // deleted and their memory released. If called with invalid position and/or
  // count throws an exception.
- void Sequence::erase(size_t position, size_t count)
+ void Sequence::erase(size_t position, size_t count) {
+     if (position >= numElts || position + count >= numElts) {
+         throw std::out_of_range("Position and/or count is out of range");
+     }
+
+    for (size_t i = 0; i < count; i++) {
+        erase(position); // keep removing the same position
+    }
+}
+
  // Outputs all elements (ex: <4, 8, 15, 16, 23, 42>) as a string to the output
  // stream. This is *not* a method of the Sequence class, but instead it is a
  // friend function
- friend ostream& operator<<(ostream& os, const Sequence& s)
+ ostream& operator<<(ostream& os, const Sequence& s) {
+    os << "<";
+    SequenceNode* current = s.head;
+    while (current != nullptr) {
+        os << current->element; // keep printing out elements
+        if (current->next != nullptr) { // next element
+            os << ", ";
+        }
+
+        current = current->next;
+
+    }
+
+    os << ">";
+    return os;
+}

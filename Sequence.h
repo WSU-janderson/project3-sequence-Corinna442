@@ -38,11 +38,23 @@ public:
     std::string& operator[](size_t position); // to access non-const element
     const std::string& operator[](size_t position) const; // to access const element
 
-    void push_back(std::string
-        element);
+    // Mutable methods
+    void push_back(std::string element);
     void pop_back();
     void insert(size_t position, std::string element);
     void erase(size_t position);
+    void erase(size_t position, size_t count);
+    void clear();
+
+    // Getters
+    std::string front() const;
+    std::string back() const;
+    bool empty() const;
+    size_t size() const;
+
+    // Friend method for printing sequence
+    // **Can only use friend keyword in .h**
+    friend std::ostream& operator<<(std::ostream& os, const Sequence& s);
 };
 
 #endif
