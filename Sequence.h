@@ -24,7 +24,6 @@ private:
     SequenceNode* head;
     SequenceNode* tail;
     size_t numElts; // Keeps track of how many elements are stored
-    //Sequence
 
 public:
     // Default constructor, deconstructor, copy constructor
