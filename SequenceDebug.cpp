@@ -19,6 +19,8 @@ int main() {
     s.push_back("Red");
     s.push_back("Green");
     s.push_back("Blue");
+    s.push_back("Aqua");
+    s.push_back("Maroon");
     s.push_back("Yellow");
     s.pop_back();
 
@@ -32,10 +34,18 @@ int main() {
     s.erase(0);
     cout << s << endl;
 
+    cout << "Erase position 2 and 3" << endl;
+    s.erase(0);
+    s.erase(0);
+    cout << s << endl;
+
     cout << "Insert Purple at position 0: " << endl;
     s.insert(0, "Purple");
     cout << "Sequence: " << s << endl;
-    // ???
+
+    cout << "Insert Brown at position 2: " << endl;
+    s.insert(1, "Brown");
+    cout << "Sequence: " << s << endl;
 
     // Clear sequence
     s.clear();

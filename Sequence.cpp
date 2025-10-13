@@ -3,154 +3,203 @@
 #include <stdexcept>
 using namespace std;
 
-// Creates an empty sequence (numElts == 0) or a sequence of numElts items
-// indexed from 0 ... (numElts - 1).
-// Constructor (initializer list)
+/**
+ * Corinna Green
+ * Project 3 - Linked Sequence Data Structure
+ * CS - 3100 Data Structures
+ * 10/13/25
+ *
+ * This project implements a doubly-linked list that stores a sequence of
+ * string elements. The sequence supports operations such as push_back,
+ * pop-back, insertion, deletion and access by index. The key features/ideas
+ * used in this class include dynamic memory management, single and multiple
+ * deletions via erase, ostream display, bound checking, and the "Big Three"
+ * constructors: default, copy, and deconstruct; along with the assignment operator.
+ *
+ * Designed to use the SequenceDebug file and TestHarness to test the following code.
+ */
 
+/**
+ * Constructs a Sequence of given size. Start with a sequence of 0 elements, or
+ * create a sequence with sz elements initialized with an empty string.
+ *
+ * @param sz number of initialized elements
+ */
 Sequence::Sequence(size_t sz) : numElts(sz), head(nullptr), tail(nullptr) {
-
     for (size_t i = 0; i < sz; i++) {
         push_back(""); // initialize nodes using push back
     }
-
 }
 
-// Copy constructor (deep) of sequence s
-Sequence::Sequence(const Sequence& s) : numElts(0), head(nullptr), tail(nullptr) {
-    SequenceNode* current = s.head; // node object to serve as the pointer for *this list
+/**
+ * Deep copy constructor. Create an independent copy of another sequence
+ * object. This copies each element value from s into a new list for this
+ * object.
+ *
+ *
+ * @param s Sequence to be copied from.
+ */
+Sequence::Sequence(const Sequence &s) : numElts(0), head(nullptr), tail(nullptr) {
+    SequenceNode *current = s.head; // node object to serve as the pointer for *this list
 
-    while (current != nullptr) { // make sure pointer isn't pointing at nothin
-        push_back(current->element); // create new nodes in deep copied list
-        current = current->next; // add nodes
+    while (current != nullptr) {
+        // make sure pointer isn't pointing at nothing
+        push_back(current->element); // Copy each element into this list
+        current = current->next; // Move to the next node
     }
-
 }
 
-// The current sequence is released and replaced by a (deep) copy of sequence
-// s. A reference to the copied sequence is returned (return *this;)
-// Assignment operator
-Sequence& Sequence::operator=(const Sequence& s) {
-    // Check so that delete[] will not wipe out the memory we need to use
-    // to copy
+/**
+ * Assignment operator.
+ * Replaces the contents of the current Sequence with a deep copy of another Sequence.
+ * This makes sure that the nodes in this list are deleted before initializing
+ * and copying the new nodes.
+ *
+ * @param s Sequence object to copy from. (RHS).
+ * @return Reference to the new Sequence object (LHS)
+ */
+Sequence &Sequence::operator=(const Sequence &s) {
+    //Prevent shallow copy**
     if (this != &s) {
-        // Checking if current object s = this sequence object (RHS = LHS)
+        // Checking if this sequence object = current object s (LHS = RHS)
+        // Copying from: s (const - cannot be modified)
+        // Assigning to: this
 
-        // Delete memory after usage to prevent leaks
-        SequenceNode* current = s.head; // Start with the ptr to the first element of the list
-        while (current != nullptr) { // keep going until it reaches the end
-            SequenceNode* newPointer = current; // temporary ptr- so that we can safely delete current node after continuing forward
+        // Delete any remaining nodes in the section we are using
+        SequenceNode *current = head; // Start with the ptr to the first element of the list
+        while (current != nullptr) {
+            SequenceNode *newPointer = current; // temporary ptr for deletion
             current = current->next; // move ptr to the next before deleting current ptr
             delete newPointer; // delete current node's memory from heap
         }
 
-        // Reset fields so that everything is empty
+        // Reset fields
         head = nullptr;
         tail = nullptr;
         numElts = 0;
 
         // Deep copy from sequence obj s
-        SequenceNode* other = s.head;
-        while (other != nullptr) { // make sure pointer isn't pointing at nothin
+        SequenceNode *other = s.head;
+        while (other != nullptr) {
+            // make sure pointer isn't pointing at nothin from orig list
             push_back(other->element); // create new nodes in deep copied list
-            current = other->next; // add nodes
+            current = other->next; // Move and add node to source list
         }
-
     }
 
-        return *this; // Chaining: a=b=c
-
-
+    return *this; // Chaining: a=b=c
 }
 
-// Destroys all items in the sequence and release the memory
-// associated with the sequence.
-// Deconstructor
+/**
+ * Deconstructor.
+ * Destroys all dynamically allocated memory in the nodes of the sequence.
+ * This goes through the list, deleting each node.
+ */
 Sequence::~Sequence() {
     while (head != nullptr) {
-        SequenceNode* newPointer = head;
-        head = head->next;
-        delete newPointer;
+        SequenceNode *newPointer = head;
+        head = head->next; // Move head forward
+        delete newPointer; // Delete old head ptr
     }
 }
 
-// The position satisfies ( position >= 0 && position <= last_index() ).
-// The return value is a reference to the item at index position in the
-// sequence. Throws an exception if the position is outside the bounds
-// of the sequence.
-// Operator[]
-std::string& Sequence::operator[](size_t position) {
+/**
+ * Provides access to a specified element by index. Will throw exception if
+ * the position is outside the sequence bounds.
+ *
+ * @param position Index of the desired element
+ * @return Reference to the string element at the specific position.
+ * @throws std::out_of_range if position >= numElts
+ */
+std::string &Sequence::operator[](size_t position) {
     if (position >= numElts) {
         throw std::out_of_range("Index is out of range");
-
-        SequenceNode* current = head;
-        for (size_t i = 1; i < position; i++) {
-            current = current->next;
-        }
-
-        return current->element;
     }
+
+    SequenceNode *current = head;
+    for (size_t i = 1; i < position; i++) {
+        current = current->next; // Move forward position times
+    }
+
+    return current->element;
 }
 
-// pop_back
+/**
+ * Adds a new element to the end of the sequence. Dynamically allocates a new
+ * node with the string item and attaches it to the tail end (becomes tail ptr)
+ * of the list.
+ *
+ * @param item The string that is added to the sequence.
+ */
 void Sequence::push_back(std::string item) {
-    SequenceNode* newNode = new SequenceNode(item);
+    // Note: doubly-linked list requires pointing forward and backward
+    SequenceNode *newNode = new SequenceNode(item); // Create new node
     if (head == nullptr) {
         head = newNode; // list is empty -> new node will be both head and tail
         tail = newNode;
     } else {
         tail->next = newNode; // Attach item to the end
         newNode->prev = tail; // tail is right before newNode (must keep a pointer backward)
-        tail = newNode;
+        tail = newNode; // New tail = added item
     }
 
     numElts++; // increment numElts
 }
 
-// The item at the end of the sequence is deleted and size of the sequence is
-// reduced by one. If sequence was empty, throws an exception
+/**
+ * Removes last element of the sequence. This deletes the tail node and
+ * decreases the sequence by one. Throws an exception if the list is empty.
+ *
+ * @throws std::out_of_range if the sequence is empty.
+ */
 void Sequence::pop_back() {
+    // An exception if there is no head and thus rest of the s
     if (head == nullptr) {
         throw std::out_of_range("Sequence is empty");
-    }
-    else if (head == tail) {
-        delete tail;
-        head = nullptr;
+    } else if (head == tail) {
+        // If there is only one node
+        delete tail; // Delete the one node
+        head = nullptr; // Make sure both are null
         tail = nullptr;
     } else {
-        SequenceNode* oldTail = tail;
-
+        SequenceNode *oldTail = tail; // initialize old tail reference
         tail = tail->prev; // move tail back one node
-        tail->next = nullptr;
+        tail->next = nullptr; // Tail now points to end
         delete oldTail; // Delete old tail to prevent leak
     }
 
-    numElts--; // decrement
-
+    numElts--; // Decrement element count
 }
 
-// The position satisfies ( position >= 0 && position <= last_index() ). The
-// value of item is inserted at position and the size of sequence is increased
-// by one. Throws an exceptionif the position is outside the bounds of the
-// sequence
+/**
+ * Inserts a new node holding the item at the provided position in sequence.
+ * Shifts the other nodes so that they "fit around" the new element. Throws
+ * an exception if position is invalid.
+ *
+ * @param position The specified index where the new item should be inserted.
+ * @param item The string value to insert
+ * @throws std::out_of_range if position >= numElts
+ */
 void Sequence::insert(size_t position, std::string item) {
     if (position >= numElts) {
         throw std::out_of_range("Position is out of range");
     }
 
-    SequenceNode* newNode = new SequenceNode(item);
+    SequenceNode *newNode = new SequenceNode(item);
 
     if (position == 0) {
         // insert beginning node
         newNode->next = head;
 
         // List empty check
-        if (head == nullptr) {
-            head->prev = newNode;
+        if (head != nullptr) {
+            head->prev = newNode; // Update old head pointer
         }
 
         head = newNode;
 
         if (tail == nullptr) {
+            // List is empty
             tail = newNode;
         }
     } else if (position == numElts) {
@@ -160,13 +209,14 @@ void Sequence::insert(size_t position, std::string item) {
         tail = newNode;
     } else {
         // Insert in the middle
-        SequenceNode* current = head;
+        SequenceNode *current = head;
         for (size_t i = 0; i < position; i++) {
             current = current->next;
         }
 
-        newNode->next = current; // points to node position
-        newNode->prev = current->prev; // points to next node position
+        // Link the new node between existing nodes
+        newNode->next = current;
+        newNode->prev = current->prev;
         current->prev->next = newNode;
         current->prev = newNode;
     }
@@ -174,8 +224,12 @@ void Sequence::insert(size_t position, std::string item) {
     numElts++;
 }
 
-// Returns the first element in the sequence. If the sequence is empty, throw an
-// exception.
+/**
+ * Returns the first element in the sequence.
+ *
+ * @return The string stored in the head node.
+ * @throws std::out_of_range if the sequence is null.
+ */
 std::string Sequence::front() const {
     if (head == nullptr) {
         throw std::out_of_range("Sequence is empty");
@@ -183,32 +237,47 @@ std::string Sequence::front() const {
     return head->element;
 }
 
-// Return the last element in the sequence. If the sequence is empty, throw an
-// exception.
+/**
+ * Returns the last node in the sequence.
+ *
+ * @return The string stored in the tail node
+ * @throws std::out_of_range if sequence is null.
+ */
 std::string Sequence::back() const {
     if (tail == nullptr) {
         throw std::out_of_range("Sequence is empty");
     }
     return tail->element;
-
 }
 
-// Return true if the sequence has no elements, otherwise false.
+/**
+ * Checks if the sequence is empty.
+ *
+ * @return true if the sequence is empty, false otherwise.
+ */
 bool Sequence::empty() const {
-    return head == nullptr && tail == nullptr; // Empty if head and tail are null
+    return head == nullptr && tail == nullptr;
 }
 
-// Return the number of elements in the sequence.
+/**
+ * Returns the number of elements that are currently in the sequence.
+ *
+ * @return The total number of elements.
+ */
 size_t Sequence::size() const {
     return numElts;
 }
 
-// sequence is released, resetting the sequence to an empty state that can have
- // items re-inserted.
- void Sequence::clear() {
-    SequenceNode* current = head;
+/**
+ * Clears the whole sequence.
+ *
+ * Deletes all nodes in the sequence and makes it empty. After clearing,
+ * the sequence can still be reused by inserting items.
+ */
+void Sequence::clear() {
+    SequenceNode *current = head;
     while (current != nullptr) {
-        SequenceNode* newPointer = current->next;
+        SequenceNode *newPointer = current->next;
         delete current;
         current = newPointer;
     }
@@ -217,15 +286,20 @@ size_t Sequence::size() const {
     numElts = 0;
 }
 
- // The item at position is removed from the sequence, and the memory
- // is released. If called with an invalid position throws an exception.
-// Remove a single element from the list at a specific position
- void Sequence::erase(size_t position) {
+/**
+ * Removes one element from a specified position. It deletes the node at
+ * its index and re-links the other nodes. Throws an exception if the
+ * position is invalid.
+ *
+ * @param position The index of the element to remove.
+ * @throws std::out_of_range if position >= numElts.
+ */
+void Sequence::erase(size_t position) {
     if (position >= numElts) {
         throw std::out_of_range("Position is out of range");
     }
 
-    SequenceNode* current = head;
+    SequenceNode *current = head;
     for (size_t i = 0; i < position; i++) {
         current = current->next;
     }
@@ -234,51 +308,61 @@ size_t Sequence::size() const {
 
     // tail
     if (current->next != nullptr) {
-        current->next->prev = current->prev; // restore original element pos
+        current->next->prev = current->prev; // Restore original element position
     } else {
-        tail = current->prev; // removing last element
+        tail = current->prev; // Removing last element
     }
 
     // head
     if (current->prev != nullptr) {
         current->prev->next = current->next;
     } else {
-        head = current->next; // remove first element
+        head = current->next; // Remove first element
     }
 
-    delete current;
+    delete current; // Delete node and decrement list by one
     numElts--;
 }
 
- // The items in the sequence at ( position ... (position + count - 1) ) are
- // deleted and their memory released. If called with invalid position and/or
- // count throws an exception.
- void Sequence::erase(size_t position, size_t count) {
-     if (position >= numElts || position + count >= numElts) {
-         throw std::out_of_range("Position and/or count is out of range");
-     }
+/**
+ * Removes all nodes starting at the given position and continues to the
+ * next counted elements. Will delete multiple elements in the sequence.
+ *
+ * @param position The starting index of removal.
+ * @param count The number of consecutive elements to delete.
+ * @throws std::out_of_range if position + count exceeds limit.
+ */
+void Sequence::erase(size_t position, size_t count) {
+    if (position >= numElts || position + count >= numElts) {
+        throw std::out_of_range("Position and/or count is out of range");
+    }
 
     for (size_t i = 0; i < count; i++) {
         erase(position); // keep removing the same position
     }
 }
 
- // Outputs all elements (ex: <4, 8, 15, 16, 23, 42>) as a string to the output
- // stream. This is *not* a method of the Sequence class, but instead it is a
- // friend function
- ostream& operator<<(ostream& os, const Sequence& s) {
+/**
+ * Outputs the sequence elements to an ostream in the following format:
+ * " <item1, item2, item3> "
+ *
+ * @param os The output stream.
+ * @param s The sequence object to print out.
+ * @return Output stream object.
+ */
+ostream &operator<<(ostream &os, const Sequence &s) {
     os << "<";
-    SequenceNode* current = s.head;
+    SequenceNode *current = s.head;
     while (current != nullptr) {
         os << current->element; // keep printing out elements
-        if (current->next != nullptr) { // next element
+        if (current->next != nullptr) {
+            // If next element is not null
             os << ", ";
         }
 
-        current = current->next;
-
+        current = current->next; // Move to next element
     }
 
     os << ">";
-    return os;
+    return os; // Return ostream reference
 }

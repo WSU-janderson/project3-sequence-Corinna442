@@ -16,7 +16,6 @@ add_executable(SequenceTestHarness
         SequenceTestHarness.cpp
         Sequence.cpp
         Sequence.h
-        main.cpp
 )
 
 # Make SequenceDebug the default startup target
